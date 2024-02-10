@@ -1,48 +1,16 @@
-const express = require('express')
-const mongoose = require('mongoose')
-const path = require('path')
 require('dotenv').config()
+const express = require('express')
+const dbConnect = require('./db')
+const cors = require('cors')
+const productRouter = require('./routes/product')
 
 const app = express()
 
 
-mongoose
-.connect(
-    `mongodb+srv://ayalaemanuel68:${process.env.MONGO_DB_PASS}@cluster0.5dtzpgv.mongodb.net/stock-app?retryWrites=true&w=majority`
-    )
-.then((result) => {
-    app.listen(PORT, () => {
-        console.log(`Servidor escuchado en el puerto ${PORT}`)
-    })
-    console.log('Conexion exitosa a la BBDD')
-})
+dbConnect(app)
 
-.catch((err) => console.log(err))
-
-const productSchema = mongoose.Schema(
-    {
-    name: {type: String, required: true},
-    price: Number,
-},
-{ timestamps: true }
-)
-
-const Product = mongoose.model('Product', productSchema)
+app.use(cors({ origin: true }))
 
 app.use(express.json())
 
-app.post('/api/v1/products', (req, res, next) => {
-
-    const newProduct = new Product(req.body)
-
-    newProduct
-    .save()
-    .then((result) => {
-        res.status(201).json({ ok: true })
-    })
-    .catch((err) => console.log(err))
-})
-
-app.use(express.static(path.join(__dirname, 'public')))
-
-const PORT = process.env.PORT
+app.use('/api/v1/products', productRouter)
